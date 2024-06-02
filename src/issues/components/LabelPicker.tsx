@@ -1,43 +1,33 @@
-import { useQuery } from "@tanstack/react-query";
-import { githubApi } from "../../api/githubApi";
-import { Label } from "../interfaces/Label";
+import { useLabels } from "../hooks";
+import Loading from "../../shared/components/Loading";
 
-
-const getLabels = async () :Promise<Label[]> => {
-  const {data} = await githubApi.get<Label[]>('/labels')
-  console.log(data)
-  return data
+interface Props {
+  selectedLabels: string[];
+  onChange: (labelName: string) => void;
 }
 
 
-export const LabelPicker = () => {
-  // Desactivar focus
-  const { data: dataLabels, isLoading, isError } = useQuery({
-    queryKey: ["labels"],
-    queryFn: getLabels,
-    refetchOnWindowFocus() {
-      return false;
-    },
-  });
+
+export const LabelPicker = ({ selectedLabels, onChange }: Props) => {
+  const { dataLabels, isLoading, isError } = useLabels();
 
   return (
     <>
-      {isLoading && <p>Loading...</p>}
+      {isLoading && <Loading/>}
       {isError && <p>Error</p>}
       {dataLabels &&
-        dataLabels?.map((
-          label: { name: string; color: string; id: number },
-          index: number
-         ) => (
-          <div key={label.id}>
+        dataLabels?.map(
+          (label: { name: string; color: string; id: number }) => (
             <span
-              className="badge rounded-pill m-1 label-picker"
-              style={{ border: `1px solid ${label.color}`, color: label.color }}
+              key={label.id}
+              className={`badge rounded-pill m-1 label-picker ${ selectedLabels.includes(label.name) ? 'bg-primary text-white' : ''}`}
+              style={{ border: `1px solid #${label.color}`, color: `#${label.color}` }}
+              onClick={() => onChange(label.name)}
             >
               {label.name}
             </span>
-          </div>
-        ))}
+          )
+        )}
     </>
   );
 };
